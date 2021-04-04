@@ -35,7 +35,7 @@ if __name__ == "__main__":
     model = HyperVQA(50, 64, 32, conv_shapes=[(8, 3), (16, 3), (32, 3)])
 
     loss_fn = CrossEntropyLoss()
-    optimizer = Adam(model.parameters())
+    optimizer = Adam(model.parameters(), lr=0.0001)
     for batch in train_loader:
         questions, _, feats, answers, programs, _ = batch
 

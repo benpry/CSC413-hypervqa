@@ -17,17 +17,19 @@ class HyperVQA(nn.Module):
         prev_I = 3
         for layer in conv_shapes:
             I, K = layer
-            total_output_weights += I * prev_I * (K ** 2)
+            total_output_weights += I * prev_I * (K ** 2) + I
             prev_I = I
 
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
         self.encoder = nn.LSTM(embedding_dim, encoder_hidden_size)
         self.hypernet = nn.Sequential(
-            nn.Linear(encoder_hidden_size, encoder_hidden_size * 4),
+            nn.Linear(encoder_hidden_size, encoder_hidden_size * 8),
             nn.ReLU(),
-            nn.Linear(encoder_hidden_size * 4, encoder_hidden_size * 8),
+            nn.Linear(encoder_hidden_size * 8, encoder_hidden_size // 16),
             nn.ReLU(),
-            nn.Linear(encoder_hidden_size * 8, total_output_weights)
+            nn.Linear(encoder_hidden_size // 16, total_output_weights // 4),
+            nn.ReLU(),
+            nn.Linear(total_output_weights // 4, total_output_weights)
         )
 
         self.linear = nn.Sequential(
@@ -76,6 +78,7 @@ class HyperVQA(nn.Module):
             conv_weights = conv_weights.view(batch_size, I, prev_I, K, K)
             x = self.conv_batch(x, conv_weights, conv_biases)
             prev_I = I
+            all_conv_weights = all_conv_weights[..., layer_num_weights+I:]
 
         # apply the final linear layers
         x = x.flatten(1)
