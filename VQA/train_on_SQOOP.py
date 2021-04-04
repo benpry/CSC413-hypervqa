@@ -1,14 +1,17 @@
 """
 This file reads the SQOOP data and trains a simple model to answer questions about it
 """
-import numpy as np
-import h5py
-import vr
+import torch
+from torch.nn import CrossEntropyLoss
+from torch.optim import Adam
 from vr import utils
 from vr.data import ClevrDataLoader
+from model import HyperVQA
 
 DATA_DIR = "../data/sqoop-variety_8-repeats_3750"
-BS = 64
+BS = 256
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 if __name__ == "__main__":
 
@@ -29,6 +32,16 @@ if __name__ == "__main__":
 
     train_loader = ClevrDataLoader(**train_loader_kwargs)
 
+    model = HyperVQA(50, 64, 32, conv_shapes=[(8, 3), (16, 3), (32, 3)])
+
+    loss_fn = CrossEntropyLoss()
+    optimizer = Adam(model.parameters())
     for batch in train_loader:
         questions, _, feats, answers, programs, _ = batch
-        print(feats.shape)
+
+        optimizer.zero_grad()
+        pred = model(questions, feats)
+        loss = loss_fn(pred, answers)
+        print(f"loss: {loss.item()}")
+        loss.backward()
+        optimizer.step()
