@@ -42,6 +42,15 @@ class HyperVQA(nn.Module):
 
     def conv_batch(self, x, weights, biases):
         """Apply the given weights and biases to the elements, one per batch"""
+        
+        # Attempting to vectorize using grouped convolutions
+        """
+        item_weigths = weigths.view(item_weigths.size(0), -1, self.kernel_size, self.kernel_size)
+        item_biases = biases.view(-1)
+        items = x.permute(1, 0, 2, 3) # Switching batch dimension and channels for grouped convolutions on batches
+        return F.conv2d(items, item_weigths, item_biases, padding=1, groups=items.size(1))
+        """
+        
         n_items = x.shape[0]
         item_outputs = []
         # TODO: figure out how to vectorize this
