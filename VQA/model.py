@@ -43,26 +43,14 @@ class HyperVQA(nn.Module):
     def conv_batch(self, x, weights, biases):
         """Apply the given weights and biases to the elements, one per batch"""
 
-        """
+        # Main idea: combining batch dimension and channel dimension
         n_items = x.shape[0]
-        item_outputs = []
-        # TODO: figure out how to vectorize this
-        for i in range(n_items):
-            item_weights = weights[i, ...]
-            item_bias = biases[i, ...]
-            item = x[i, ...].unsqueeze(0)
-            item_out = F.conv2d(item, item_weights, item_bias, padding=1)
-            item_outputs.append(item_out)
-
-        all_output = torch.cat(item_outputs, dim=0)
-        return all_output
-        """
-
-        # Using grouped convolutions
-        item_weights = weights.view(weights.size(0), -1, self.kernel_size, self.kernel_size)
-        item_biases = biases.view(-1)
-        items = x.permute(1, 0, 2, 3) # Switching batch dimension and channels for grouped convolutions on batches
-        return F.conv2d(items, item_weights, item_biases, padding=1, groups=items.size(1))
+        original_out_channels = weights.shape[1]
+        out_channels = n_items*original_out_channels
+        
+        all_output = F.conv2d(x.view(1, n_items*x.shape[1], x.shape[2], x.shape[3]), weights.reshape(out_channels, weights.shape[2], weights.shape[3], weights.shape[4]), biases.reshape(-1), padding=1, groups=n_items)
+        
+        return all_output.reshape(n_items, original_out_channels, all_output.shape[2], all_output.shape[3])
 
     def forward(self, questions, images):
         """Make a prediction based on questions and images"""
