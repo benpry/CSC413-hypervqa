@@ -19,3 +19,4 @@ from vr.models.maced_net import MAC
 from vr.models.baselines import LstmModel, CnnLstmModel, CnnLstmSaModel
 from vr.models.relation_net import RelationNet
 from vr.models.convlstm import ConvLSTM
+from vr.models.hypervqa import HyperVQA
