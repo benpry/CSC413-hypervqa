@@ -24,11 +24,9 @@ class HyperVQA(nn.Module):
         self.encoder = nn.LSTM(embedding_dim, encoder_hidden_size)
         self.hypernet = nn.Sequential(
             nn.Linear(encoder_hidden_size, encoder_hidden_size * 4),
-            nn.ReLU(),
-            nn.Linear(encoder_hidden_size * 4, encoder_hidden_size * 8),
-            nn.ReLU(),
-            nn.Linear(encoder_hidden_size * 8, encoder_hidden_size * 16),
-            nn.ReLU(),
+            nn.LeakyReLU(negative_slope=1/5.5),
+            nn.Linear(encoder_hidden_size * 4, encoder_hidden_size * 16),
+            nn.LeakyReLU(negative_slope=1/5.5),
             nn.Linear(encoder_hidden_size * 16, total_output_weights)
         )
 
